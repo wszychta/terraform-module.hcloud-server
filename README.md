@@ -5,6 +5,7 @@
 ## Supported features
 - Creating Hetzner Cloud VM with all described variables inside [hcloud_server resource](https://registry.terraform.io/providers/hetznercloud/hcloud/latest/docs/resources/server)
 - Using all `cloud-init` features described in [Hetzner User Data](https://github.com/wszychta/terraform-module.hcloud-user-data/blob/master/README.md) module
+- This module supports `ignore_changes` lifecycle rule
 
 ## Unsupported features
 - Creating Private networks for VM - Please read more [here](#module-is-not-creating-private-network-interfaces)
@@ -99,7 +100,6 @@ This is why I haven't added support for creating private newtork interfaces insi
 #### Affected instances types:
 - `CXxx`
 - `CPXxx`
-- `CXxx-CEPH`
 - `CCXxx`
 
 #### Solution
@@ -123,6 +123,21 @@ resource "hcloud_server_network" "vm_private_ip_2" {
 }
 ```
 
+### Adding lifecycle records forces replacement of the VM
+<b>This is expected result.</b> This is happening because `lifecycle` meta-argument cannot be used with `dynamic` meta-argument. Explanation can be found explenation [here](https://stackoverflow.com/a/62448476)
+
+#### Affected instances types:
+- `CXxx`
+- `CPXxx`
+- `CCXxx`
+
+#### Solution 
+You must move instance terraform state like in example below. This is the only way to prevent recreation of the instance.
+```bash
+terraform state mv 'module.vm.hcloud_server.server_without_lifecycle_rules' 'module.vm.hcloud_server.server_with_lifecycle_rules' # when there is a need to add lifecycle ignore_changes rules
+terraform state mv 'module.vm.hcloud_server.server_with_lifecycle_rules' 'module.vm.hcloud_server.server_without_lifecycle_rules' # when there is a need to remove lifecycle ignore_changes rules
+```
+
 ### Only local SSDs on shared resources are using cloud-init related variables
 
 [Hetzner User Data](https://github.com/wszychta/terraform-module.hcloud-user-data) module was not designed to to work with affected instances types. 
@@ -134,7 +149,6 @@ Because of that below list of variables will be ignored when you use this module
 If you need such functionality please think about creating Pull Request for described module. You can find [developing manual in module README](https://github.com/wszychta/terraform-module.hcloud-user-data#developing).
 
 #### Affected instances types:
-- `CXxx-CEPH`
 - `CCXxx`
 
 #### Solution
@@ -143,34 +157,35 @@ There is variable called `external_user_data_file` which will always be used ins
 
 ## Variables
 
-| Variable name                       | variable type  | default value   | Required variable | Description |
-|:-----------------------------------:|:---------------|:---------------:|:-----------------:|:-----------:|
-| server_name                         | `string`       | `empty`         | <b>Yes</b>        | Name of the server to create (must be unique per project and a valid hostname as per RFC 1123) |
-| server_type                         | `string`       | `empty`         | <b>Yes</b>        | Name of the server type this server should be created with. To find all avaliable options run command `hcloud server-type list` |
-| server_image                        | `string`       | `empty`         | <b>Yes</b>        | Name or ID of the image the server is created from. To find all avaliable options run command `hcloud image list -o columns=name | grep -v -w '-'` |
-| server_location                     | `string`       | `empty`         | <b>No</b>        | The location name to create the server in. To find all avaliable options run command `hcloud location list` |
-| server_datacenter                   | `string`       | `empty`         | <b>No</b>       | The datacenter name to create the server in |
-| server_ssh_keys                     | `string`       | `empty`         | <b>No</b>        | SSH key IDs or names which should be injected into the server at creation time` |
-| server_keep_disk                    | `string`       | `empty`         | <b>No</b>        | If true, do not upgrade the disk. This allows downgrading the server type later |
-| server_iso                          | `string`       | `empty`         | <b>No</b>        | ID or Name of an ISO image to mount |
-| server_boot_rescue_image            | `string`       | `empty`         | <b>No</b>        | Enable and boot in to the specified rescue system. This enables simple installation of custom operating systems. Avaliable options are: linux64 linux32 or freebsd64 |
-| server_labels                       | `string`       | `empty`         | <b>No</b>        | User-defined labels (key-value pairs) should be created with |
-| server_enable_backups               | `string`       | `empty`         | <b>No</b>        | Enable or disable backups |
-| server_firewall_ids                 | `string`       | `empty`         | <b>No</b>        | Firewall IDs the server should be attached to on creation |
-| server_placement_group_id           | `string`       | `empty`         | <b>No</b>        | Placement Group ID the server added to on creation |
-| server_enable_protection            | `string`       | `empty`         | <b>No</b>        | Enable or disable delete and rebuild protection - They must be the same for now |
-| server_private_networks_settings    |<pre>list(object({<br>    network_id    = string<br>    ip            = string<br>    alias_ips     = list(string)<br>    routes        = map(list(string))<br>    nameservers   = object({<br>      addresses   = list(string)<br>      search      = list(string)<br>    })<br>})</pre>| `[]` | <b>No</b> | List of configuration for all private networks.<br><b>Note:</b> Routes are defined as <b>map(list(string))</b> where key is a <b>gateway ip address</b> and list contains all <b> network destinations</b>.<br><b>Example:</b> `"192.168.0.1" = ["192.168.0.0/24","192.168.1.0/24"]` |
-| user_data_additional_users          |<pre>list(object({<br>    username        = string<br>    sudo_options    = string<br>    ssh_public_keys = list(string)<br>}))</pre>| `[]` | <b>No</b> | List of additional users with their options |
-| user_data_additional_write_files    |<pre>list(object({<br>    content     = string<br>    owner_user  = string<br>    owner_group = string<br>    destination = string<br>    permissions = string<br>}))</pre>| `[]` | <b>No</b> | List of additional files to create on first boot.<br><b>Note:</b> inside `content` value please provide <u><i>plain text content of the file</i></u> (not the path to the file).<br>You can use terraform to generate file from template or to read existing file from local machine |
-| user_data_additional_hosts_entries  |<pre>list(object({<br>    ip        = string<br>    hostnames    = string<br>}))</pre>| `[]` | <b>No</b> | List of entries for `/etc/hosts` file. There is possibility to define multiple hostnames per single ip address |
-| user_data_additional_run_commands   | `list(string)` | `[]`             | <b>No</b>         | List of additional commands to run on boot |
-| user_data_additional_packages       | `list(string)` | `[]`             | <b>No</b>         | List of additional pckages to install on first boot |
-| user_data_timezone                  | `string`       | `Europe/Berlin`  | <b>No</b>         | Timezone for the VM |
-| user_data_upgrade_all_packages      | `bool`         | `true`           | <b>No</b>         | Set to false when there is no need to upgrade packages on first boot |
-| user_data_reboot_instance           | `bool`         | `true`           | <b>No</b>         | Set to false when there is no need for instance reboot after finishing cloud-init tasks |
-| user_data_yq_version                | `string`       | `v4.6.3`         | <b>No</b>         | Version of yq script used for merging netplan script |
-| user_data_yq_binary                 | `string`       | `yq_linux_amd64` | <b>No</b>         | Binary of yq script used for merging netplan script |
-| external_user_data_file             | `string`       | `empty`          | <b>No</b>         | external user-data file - it will be used instead of all `user_data_*` variables |
+| Variable name                         | variable type  | default value   | Required variable | Description |
+|:-------------------------------------:|:---------------|:---------------:|:-----------------:|:-----------:|
+| server_name                           | `string`       | `empty`         | <b>Yes</b>        | Name of the server to create (must be unique per project and a valid hostname as per RFC 1123) |
+| server_type                           | `string`       | `empty`         | <b>Yes</b>        | Name of the server type this server should be created with. To find all avaliable options run command `hcloud server-type list` |
+| server_image                          | `string`       | `empty`         | <b>Yes</b>        | Name or ID of the image the server is created from. To find all avaliable options run command `hcloud image list -o columns=name | grep -v -w '-'` |
+| server_location                       | `string`       | `empty`         | <b>No</b>        | The location name to create the server in. To find all avaliable options run command `hcloud location list` |
+| server_datacenter                     | `string`       | `empty`         | <b>No</b>       | The datacenter name to create the server in |
+| server_ssh_keys                       | `string`       | `empty`         | <b>No</b>        | SSH key IDs or names which should be injected into the server at creation time` |
+| server_keep_disk                      | `string`       | `empty`         | <b>No</b>        | If true, do not upgrade the disk. This allows downgrading the server type later |
+| server_iso                            | `string`       | `empty`         | <b>No</b>        | ID or Name of an ISO image to mount |
+| server_boot_rescue_image              | `string`       | `empty`         | <b>No</b>        | Enable and boot in to the specified rescue system. This enables simple installation of custom operating systems. Avaliable options are: linux64 linux32 or freebsd64 |
+| server_labels                         | `string`       | `empty`         | <b>No</b>        | User-defined labels (key-value pairs) should be created with |
+| server_enable_backups                 | `string`       | `empty`         | <b>No</b>        | Enable or disable backups |
+| server_firewall_ids                   | `string`       | `empty`         | <b>No</b>        | Firewall IDs the server should be attached to on creation |
+| server_placement_group_id             | `string`       | `empty`         | <b>No</b>        | Placement Group ID the server added to on creation |
+| server_enable_protection              | `string`       | `empty`         | <b>No</b>        | Enable or disable delete and rebuild protection - They must be the same for now |
+| server_private_networks_settings      |<pre>list(object({<br>    network_id    = string<br>    ip            = string<br>    alias_ips     = list(string)<br>    routes        = map(list(string))<br>    nameservers   = object({<br>      addresses   = list(string)<br>      search      = list(string)<br>    })<br>})</pre>| `[]` | <b>No</b> | List of configuration for all private networks.<br><b>Note:</b> Routes are defined as <b>map(list(string))</b> where key is a <b>gateway ip address</b> and list contains all <b> network destinations</b>.<br><b>Example:</b> `"192.168.0.1" = ["192.168.0.0/24","192.168.1.0/24"]` |
+| server_lifecycle_ignore_changes_rules | `list(string)` | `[]`             | <b>No</b>         | List of `ignore_changes` lifecycle meta-argument variables |
+| user_data_additional_users            |<pre>list(object({<br>    username        = string<br>    sudo_options    = string<br>    ssh_public_keys = list(string)<br>}))</pre>| `[]` | <b>No</b> | List of additional users with their options |
+| user_data_additional_write_files      |<pre>list(object({<br>    content     = string<br>    owner_user  = string<br>    owner_group = string<br>    destination = string<br>    permissions = string<br>}))</pre>| `[]` | <b>No</b> | List of additional files to create on first boot.<br><b>Note:</b> inside `content` value please provide <u><i>plain text content of the file</i></u> (not the path to the file).<br>You can use terraform to generate file from template or to read existing file from local machine |
+| user_data_additional_hosts_entries    |<pre>list(object({<br>    ip        = string<br>    hostnames    = string<br>}))</pre>| `[]` | <b>No</b> | List of entries for `/etc/hosts` file. There is possibility to define multiple hostnames per single ip address |
+| user_data_additional_run_commands     | `list(string)` | `[]`             | <b>No</b>         | List of additional commands to run on boot |
+| user_data_additional_packages         | `list(string)` | `[]`             | <b>No</b>         | List of additional pckages to install on first boot |
+| user_data_timezone                    | `string`       | `Europe/Berlin`  | <b>No</b>         | Timezone for the VM |
+| user_data_upgrade_all_packages        | `bool`         | `true`           | <b>No</b>         | Set to false when there is no need to upgrade packages on first boot |
+| user_data_reboot_instance             | `bool`         | `true`           | <b>No</b>         | Set to false when there is no need for instance reboot after finishing cloud-init tasks |
+| user_data_yq_version                  | `string`       | `v4.6.3`         | <b>No</b>         | Version of yq script used for merging netplan script |
+| user_data_yq_binary                   | `string`       | `yq_linux_amd64` | <b>No</b>         | Binary of yq script used for merging netplan script |
+| external_user_data_file               | `string`       | `empty`          | <b>No</b>         | external user-data file - it will be used instead of all `user_data_*` variables |
 
 ## Outputs
 
@@ -186,7 +201,6 @@ There is variable called `external_user_data_file` which will always be used ins
 | server_ipv6_network     | Server IPv6 Network |
 | server_private_networks | Output of the `network` variable with private networks details |
 | result_user_data_file   | Result cloud-config file which will be used by instance (depending on provided `server_image` variable) |
-| result_hosts_file       | (only if `external_user_data_file` was not provided) Result host entries file which will be injected into `/etc/hosts` file |
 
 ## Contributing
 ### Bug Reports/Feature Requests

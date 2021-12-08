@@ -104,7 +104,7 @@ variable "server_private_networks_settings" {
 
 variable "server_lifecycle_ignore_changes_rules" {
   type        = list(string)
-  description = "Defines the list of ignored variables"
+  description = "List of `ignore_changes` lifecycle meta-argument variables"
 }
 
 variable "user_data_additional_users" {
