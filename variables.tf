@@ -33,56 +33,67 @@ variable "server_image" {
 variable "server_location" {
   type        = string
   description = "The location name to create the server in. To find all avaliable options run command `hcloud location list`"
+  default = null
 }
 
 variable "server_datacenter" {
   type        = string
   description = "The datacenter name to create the server in"
+  default = null
 }
 
 variable "server_ssh_keys" {
   type        = list(string)
   description = "SSH key IDs or names which should be injected into the server at creation time"
+  default = null
 }
 
 variable "server_keep_disk" {
   type        = bool
   description = "If true, do not upgrade the disk. This allows downgrading the server type later"
+  default = false
 }
 
 variable "server_iso" {
   type        = string
   description = "ID or Name of an ISO image to mount"
+  default = null
 }
 
 variable "server_boot_rescue_image" {
   type        = string
   description = "Enable and boot in to the specified rescue system. This enables simple installation of custom operating systems. Avaliable options are: linux64 linux32 or freebsd64"
+  default = null
 }
 
 variable "server_labels" {
   type        = map(string)
   description = "User-defined labels (key-value pairs) should be created with"
+  default = null
 }
 
 variable "server_enable_backups" {
   type        = bool
   description = "Enable or disable backups"
+  default = false
 }
 
 variable "server_firewall_ids" {
   type        = list(string)
   description = "Firewall IDs the server should be attached to on creation"
+  default = null
 }
 
 variable "server_placement_group_id" {
   type        = string
   description = "Placement Group ID the server added to on creation"
+  default = null
 }
 
 variable "server_enable_protection" {
   type        = bool
   description = "Enable or disable delete and rebuild protection - They must be the same for now"
+  default = false
 }
 
 variable "server_private_networks_settings" {
@@ -100,11 +111,7 @@ variable "server_private_networks_settings" {
       )
     }
   ))
-}
-
-variable "server_lifecycle_ignore_changes_rules" {
-  type        = list(string)
-  description = "List of `ignore_changes` lifecycle meta-argument variables"
+  default = []
 }
 
 variable "user_data_additional_users" {
@@ -113,6 +120,7 @@ variable "user_data_additional_users" {
     sudo_options    = string
     ssh_public_keys = list(string)
   }))
+  default = []
 }
 
 variable "user_data_additional_write_files" {
@@ -123,6 +131,7 @@ variable "user_data_additional_write_files" {
     destination = string
     permissions = string
   }))
+  default = []
 }
 
 variable "user_data_additional_hosts_entries" {
@@ -130,37 +139,46 @@ variable "user_data_additional_hosts_entries" {
     ip        = string
     hostnames = list(string)
   }))
+  default = []
 }
 
 variable "user_data_additional_run_commands" {
   type = list(string)
+  default = []
 }
 
 variable "user_data_additional_packages" {
   type = list(string)
+  default = []
 }
 
 variable "user_data_upgrade_all_packages" {
   type = bool
+  default = false
 }
 
 variable "user_data_reboot_instance" {
   type = bool
+  default = false
 }
 
 variable "user_data_timezone" {
   type = string
+  default = "Europe/Berlin"
 }
 
 variable "user_data_yq_version" {
   type = string
+  default = "v4.6.3"
 }
 
 variable "user_data_yq_binary" {
   type = string
+  default = "yq_linux_amd64"
 }
 
 variable "external_user_data_file" {
   type        = string
   description = "This user_data file will be used in new vm instead of the one generated with the module"
+  default = null
 }

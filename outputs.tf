@@ -16,51 +16,51 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 output "server_id" {
-  value       = local.final_server_id
+  value       = hcloud_server.server_with_lifecycle_rules.id
   description = "Server ID"
 }
 
 output "server_name" {
-  value       = local.final_server_name
+  value       = hcloud_server.server_with_lifecycle_rules.name
   description = "Server name"
 }
 
 output "server_location" {
-  value       = local.final_server_location
+  value       = hcloud_server.server_with_lifecycle_rules.location
   description = "The name of the location used for this instance"
 }
 
 output "server_datacenter" {
-  value       = local.final_server_datacenter
+  value       = hcloud_server.server_with_lifecycle_rules.datacenter
   description = "The name of the datacenter used for this instance"
 }
 
 output "server_backup_window" {
-  value       = local.final_server_backup_windows
+  value       = hcloud_server.server_with_lifecycle_rules.backup_window
   description = "Backup window time if backup option was enabled"
 }
 
 output "server_ipv4_address" {
-  value       = local.final_server_ipv4_address
+  value       = hcloud_server.server_with_lifecycle_rules.ipv4_address
   description = "Server IPv4 Public Address"
 }
 
 output "server_ipv6_address" {
-  value       = local.final_server_ipv6_address
+  value       = hcloud_server.server_with_lifecycle_rules.ipv6_address
   description = "Server IPv6 Public Address"
 }
 
 output "server_ipv6_network" {
-  value       = local.final_server_ipv6_network
+  value       = hcloud_server.server_with_lifecycle_rules.ipv6_network
   description = "Server IPv6 Network"
 }
 
 output "server_private_networks" {
-  value       = local.final_server_private_networks
+  value       = hcloud_server.server_with_lifecycle_rules.network
   description = "Output of the `network` variable with private networks details"
 }
 
 output "result_user_data_file" {
-  value       = var.external_user_data_file != null ? var.external_user_data_file : module.server_user_data_file.result_file
+  value       = var.external_user_data_file != null || local.server_type_family == "ccx" ? var.external_user_data_file : join("", module.server_user_data_file.*.result_file)
   description = "Result cloud-config file which will be used by instance"
 }

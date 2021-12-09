@@ -17,7 +17,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 locals {
   server_type_family                            = replace(var.server_type, "/[1-9]+/", "")
-  changed_server_lifecycle_ignore_changes_rules = distinct(flatten([for variable in var.server_lifecycle_ignore_changes_rules : variable == "private_networks_settings" ? ["network"] : variable == "server_enable_protection" ? ["delete_protection", "rebuild_protection"] : [replace(variable, "server_", "")]]))
 }
 
 module "server_user_data_file" {
@@ -39,37 +38,7 @@ module "server_user_data_file" {
   yq_binary                 = var.user_data_yq_binary
 }
 
-resource "hcloud_server" "server_without_lifecycle_rules" {
-  count              = var.server_lifecycle_ignore_changes_rules == null ? 1 : 0
-  name               = var.server_name
-  server_type        = var.server_type
-  image              = var.server_image
-  location           = var.server_location
-  datacenter         = var.server_datacenter
-  ssh_keys           = var.server_ssh_keys
-  keep_disk          = var.server_keep_disk
-  iso                = var.server_iso
-  boot_rescue_image  = var.server_boot_rescue_image
-  labels             = var.server_labels
-  backups            = var.server_enable_backups
-  firewall_ids       = var.server_firewall_ids
-  placement_group_id = var.server_placement_group_id
-  delete_protection  = var.server_enable_protection
-  rebuild_protection = var.server_enable_protection
-  user_data          = var.external_user_data_file != null || local.server_type_family == "ccx" ? var.external_user_data_file : join("", module.server_user_data_file.*.result_file)
-
-  dynamic "network" {
-    for_each = toset(var.server_private_networks_settings)
-    content {
-      network_id = each.key["network_id"]
-      ip         = each.key["ip"]
-      alias_ips  = each.key["alias_ips"]
-    }
-  }
-}
-
 resource "hcloud_server" "server_with_lifecycle_rules" {
-  count              = var.server_lifecycle_ignore_changes_rules != null ? 1 : 0
   name               = var.server_name
   server_type        = var.server_type
   image              = var.server_image
@@ -78,7 +47,7 @@ resource "hcloud_server" "server_with_lifecycle_rules" {
   ssh_keys           = var.server_ssh_keys
   keep_disk          = var.server_keep_disk
   iso                = var.server_iso
-  boot_rescue_image  = var.server_boot_rescue_image
+  rescue             = var.server_boot_rescue_image
   labels             = var.server_labels
   backups            = var.server_enable_backups
   firewall_ids       = var.server_firewall_ids
@@ -88,27 +57,18 @@ resource "hcloud_server" "server_with_lifecycle_rules" {
   user_data          = var.external_user_data_file != null || local.server_type_family == "ccx" ? var.external_user_data_file : join("", module.server_user_data_file.*.result_file)
 
   dynamic "network" {
-    for_each = toset(var.server_private_networks_settings)
+    for_each = var.server_private_networks_settings
     content {
-      network_id = each.key["network_id"]
-      ip         = each.key["ip"]
-      alias_ips  = each.key["alias_ips"]
+      network_id = network.value["network_id"]
+      ip         = network.value["ip"]
+      alias_ips  = network.value["alias_ips"]
     }
   }
 
   lifecycle {
-    ignore_changes = local.changed_server_lifecycle_ignore_changes_rules
+    ignore_changes = [ 
+      ssh_keys,
+      user_data
+    ]
   }
-}
-
-locals {
-  final_server_id               = var.server_lifecycle_ignore_changes_rules == null ? join("", hcloud_server.server_without_lifecycle_rules.*.id) : join("", hcloud_server.server_with_lifecycle_rules.*.id)
-  final_server_name             = var.server_lifecycle_ignore_changes_rules == null ? join("", hcloud_server.server_without_lifecycle_rules.*.name) : join("", hcloud_server.server_with_lifecycle_rules.*.name)
-  final_server_location         = var.server_lifecycle_ignore_changes_rules == null ? join("", hcloud_server.server_without_lifecycle_rules.*.location) : join("", hcloud_server.server_with_lifecycle_rules.*.location)
-  final_server_datacenter       = var.server_lifecycle_ignore_changes_rules == null ? join("", hcloud_server.server_without_lifecycle_rules.*.datacenter) : join("", hcloud_server.server_with_lifecycle_rules.*.datacenter)
-  final_server_backup_windows   = var.server_lifecycle_ignore_changes_rules == null ? join("", hcloud_server.server_without_lifecycle_rules.*.backup_windows) : join("", hcloud_server.server_with_lifecycle_rules.*.backup_windows)
-  final_server_ipv4_address     = var.server_lifecycle_ignore_changes_rules == null ? join("", hcloud_server.server_without_lifecycle_rules.*.ipv4_address) : join("", hcloud_server.server_with_lifecycle_rules.*.ipv4_address)
-  final_server_ipv6_address     = var.server_lifecycle_ignore_changes_rules == null ? join("", hcloud_server.server_without_lifecycle_rules.*.ipv6_address) : join("", hcloud_server.server_with_lifecycle_rules.*.ipv6_address)
-  final_server_ipv6_network     = var.server_lifecycle_ignore_changes_rules == null ? join("", hcloud_server.server_without_lifecycle_rules.*.ipv6_network) : join("", hcloud_server.server_with_lifecycle_rules.*.ipv6_network)
-  final_server_private_networks = var.server_lifecycle_ignore_changes_rules == null ? join("", hcloud_server.server_without_lifecycle_rules.*.network) : join("", hcloud_server.server_with_lifecycle_rules.*.network)
 }
