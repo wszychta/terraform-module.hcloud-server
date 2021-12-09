@@ -16,12 +16,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 locals {
-  server_type_family                            = replace(var.server_type, "/[1-9]+/", "")
+  server_type_family = replace(var.server_type, "/[1-9]+/", "")
 }
 
 module "server_user_data_file" {
-  # source = "git::git@github.com:wszychta/terraform-module.hcloud-user-data?ref=2.1.0"
-  source                    = "git::git@github.com:wszychta/terraform-module.hcloud-user-data?ref=server_module_integration"
+  source                    = "git::git@github.com:wszychta/terraform-module.hcloud-user-data?ref=2.1.0"
   count                     = var.external_user_data_file == null && local.server_type_family != "ccx" ? 1 : 0
   server_type               = var.server_type
   server_image              = var.server_image
@@ -66,7 +65,7 @@ resource "hcloud_server" "server_with_lifecycle_rules" {
   }
 
   lifecycle {
-    ignore_changes = [ 
+    ignore_changes = [
       ssh_keys,
       user_data
     ]

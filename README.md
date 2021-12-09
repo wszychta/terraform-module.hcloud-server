@@ -128,7 +128,7 @@ terraform apply p.tfplan
 
 ### Only local SSDs on shared resources are using cloud-init related variables
 
-[Hetzner User Data](https://github.com/wszychta/terraform-module.hcloud-user-data) module was not designed to to work with affected instances types. 
+[Hetzner User Data](https://github.com/wszychta/terraform-module.hcloud-user-data) module was not designed to work with affected instances types. 
 
 <b>I'm not using any of described types of instances and I'm not going to do this. I'm paing with my own money while I'm working on this module and I have no interest in using any of affected instances types</b>
 
