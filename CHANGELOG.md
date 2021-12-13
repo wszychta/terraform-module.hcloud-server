@@ -1,3 +1,7 @@
+
+# 1.0.1
+- Fix Netplan images private networking
+
 # 1.0.0
 
 ## Main changes
