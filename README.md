@@ -20,7 +20,7 @@ I have tested this module on below instances types:
 Example for Debian/Ubuntu with few packages installation:
 ```terraform
 module "hetzner_instance" {
-  source                    = "git::git@github.com:wszychta/terraform-module.hcloud-server?ref=1.0.0"
+  source                    = "git::git@github.com:wszychta/terraform-module.hcloud-server?ref=1.0.2"
   server_name               = "testing_vm"
   server_type               = "cpx11"
   server_image              = "ubuntu-20.04"
@@ -101,6 +101,106 @@ I saw that there are 2 ways of solving this issue. Please try them in the order 
 1. <b>(Working in most cases)</b> Please shut down instance and turn on it again. This way all network interfaces will be attached to the instance again.
 
 Also please remember that `routes` and `nameserver` settings are applied only on instance creation, so machine must be recreated anyway when you have changed any of mentioned variables in any of the private interfaces. Please read [this manual](#changes-in-server_ssh_keys-or-user_data-are-not-forcing-instance-recreation) to know how to force instance recreation.
+
+### After adding multiple private network interfaces only public interface is configured correctly 
+This is a problem of how Hetzner provider is creating private network interfaces. From the Provider point of view <b>the order doesn't matter and this is correct</b>. In this module case when you need to configure multiple private interfaces options <b>the order matters a lot</b>.
+
+In some cases the order of private network interfaces will be different than the order of the interfaces defined in configuration files created with this module.
+
+#### Affected instances types:
+- `CXxx`
+- `CPXxx`
+- `CCXxx`
+
+#### Solution
+There are 2 ways of solving this issue. Please try them in the order I made:
+1. I option (only for existing instances):
+    1. login into instance
+    1. Check with command `ip a` which interfaces have which IP address
+    1. Based on that information you need to do few steps. On each OS type different:
+        1. Debian:
+            1. Open File `/etc/network/interfaces.d/61-my-private-network.cfg` with favourite editor ex. `vi /etc/network/interfaces.d/61-my-private-network.cfg`
+            1. Change the names of the interfaces to the correct configurations in this file and save it.
+            1. Run command `sudo /etc/init.d/networking restart` or reboot instance
+        1. Ubuntu:
+            1. Open File `/etc/netplan/50-cloud-init.yaml` with favourite editor ex. `vi /etc/netplan/50-cloud-init.yaml`
+            1. Change the names of the interfaces to the correct configurations in this file and save it.
+            1. Run command `sudo systemctl restart network-manager.service` or reboot instance
+        1. CentOS/Fedora:
+            1. Go to network configuration directory `cd /etc/sysconfig/network-scripts`
+            1. Change <b>interfaces names</b> in the files `route-` and `ifcfg-` 
+            1. Open each `ifcfg-` file and change `DEVICE` option to correct one. After changing save it.
+            1. Run command `sudo systemctl restart network` or reboot instance
+1. II option (prevents this issue, but you will have more complex code):
+    1. Pass in variable `server_private_network_settings` below options for each interface like in the example below:
+        - network_id = `""`
+        - ip         = `""`
+        - alias_ips  = `[]`
+    1. Create [Network interfaces](https://registry.terraform.io/providers/hetznercloud/hcloud/latest/docs/resources/server_network) outside of the module scope with `depends_on` terraform flag like in the example below:
+    ```terraform
+    module "hetzner_instance" {
+      source                    = "git::git@github.com:wszychta/terraform-module.hcloud-server?ref=1.0.2"
+      ...
+      server_private_networks_settings = [
+        {
+          network_id = "
+          ip         = ""
+          alias_ips  = []
+          routes = {
+            "192.168.0.1" = [
+              "192.168.0.0/24",
+              "192.168.1.0/24"
+            ]
+          }
+          nameservers = {
+            addresses = [
+              "192.168.0.3"
+            ]
+            search = [
+              "lab.net",
+            ]
+          }
+        },
+        {
+          network_id = "
+          ip         = ""
+          alias_ips  = []
+          routes = {
+            "192.168.2.1" = [
+              "192.168.2.0/24",
+              "192.168.3.0/24"
+            ]
+          }
+          nameservers = {
+            addresses = [
+              "192.168.2.3"
+            ]
+            search = [
+              "lab2.net",
+            ]
+          }
+        }
+      ]   
+    }
+
+    resource "hcloud_server_network" "srvnetwork1" {
+      server_id  = module.hetzner_instance.server_id
+      network_id = "desired_value"
+      ip         = "desired_value"
+      alias_ips  = []
+    }
+
+    resource "hcloud_server_network" "srvnetwork2" {
+      server_id  = module.hetzner_instance.server_id
+      network_id = "desired_value"
+      ip         = "desired_value"
+      alias_ips  = []
+
+      depends_on = [
+        hcloud_server_network.srvnetwork1
+      ]
+    }
+    ```
 
 ### Changes in server_ssh_keys or user_data are not forcing instance recreation
 <b>This is expected result.</b> This is happening because `lifecycle` meta-argument cannot be used with `dynamic` meta-argument. Explanation can be found explenation [here](https://stackoverflow.com/a/62448476)
