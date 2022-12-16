@@ -30,15 +30,9 @@ variable "server_image" {
   description = "(Required) Name or ID of the image the server is created from. To find all avaliable options run command `hcloud image list -o columns=name | grep -v -w '-'`"
 }
 
-variable "server_location" {
-  type        = string
-  description = "The location name to create the server in. To find all avaliable options run command `hcloud location list`"
-  default     = null
-}
-
 variable "server_datacenter" {
   type        = string
-  description = "The datacenter name to create the server in"
+  description = "The datacenter name to create the server in. Required if any Public IP will be created with this module - it is replacing `server_location` variable"
   default     = null
 }
 

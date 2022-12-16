@@ -63,7 +63,6 @@ resource "hcloud_server" "server_with_lifecycle_rules" {
   name               = var.server_name
   server_type        = var.server_type
   image              = var.server_image
-  location           = var.server_enable_public_ipv4 || var.server_enable_public_ipv6 || var.server_public_ipv4_id != null || var.server_public_ipv6_id != null ? split("-", var.server_datacenter)[0] : var.server_location
   datacenter         = var.server_datacenter
   ssh_keys           = var.server_ssh_keys
   keep_disk          = var.server_keep_disk
