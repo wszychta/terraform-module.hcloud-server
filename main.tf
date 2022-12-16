@@ -71,16 +71,16 @@ resource "hcloud_server" "server_with_lifecycle_rules" {
   rescue             = var.server_boot_rescue_image
   labels             = var.server_labels
   backups            = var.server_enable_backups
-  firewall_ids       = var.server_enable_public_ipv4 || var.server_enable_public_ipv6 ? var.server_firewall_ids : null
+  firewall_ids       = var.server_enable_public_ipv4 || var.server_enable_public_ipv6 || var.server_public_ipv4_id == null || var.server_public_ipv6_id == null ? var.server_firewall_ids : null
   placement_group_id = var.server_placement_group_id
   delete_protection  = var.server_enable_protection
   rebuild_protection = var.server_enable_protection
   user_data          = var.external_user_data_file != null || local.server_type_family == "ccx" ? var.external_user_data_file : join("", module.server_user_data_file.*.result_file)
 
   public_net {
-    ipv4_enabled = var.server_enable_public_ipv4
+    ipv4_enabled = var.server_public_ipv4_id == null ? var.server_enable_public_ipv4 : true
     ipv4 = var.server_enable_public_ipv4 ? var.server_public_ipv4_id == null ? one(hcloud_primary_ip.v4[*].id) : var.server_public_ipv4_id : null
-    ipv6_enabled = var.server_enable_public_ipv6
+    ipv6_enabled = var.server_public_ipv4_id == null ? var.server_enable_public_ipv6 : true
     ipv6 = var.server_enable_public_ipv6 ? var.server_public_ipv6_id == null ? one(hcloud_primary_ip.v6[*].id) : var.server_public_ipv6_id : null
   }
 
