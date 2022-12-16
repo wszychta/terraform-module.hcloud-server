@@ -79,9 +79,9 @@ resource "hcloud_server" "server_with_lifecycle_rules" {
 
   public_net {
     ipv4_enabled = var.server_enable_public_ipv4
-    ipv4 = var.server_enable_public_ipv4 ? var.server_public_ipv4_id == null ? one(hcloud_primary_ip.ipv4[*].id) : var.server_public_ipv4_id : null
+    ipv4 = var.server_enable_public_ipv4 ? var.server_public_ipv4_id == null ? one(hcloud_primary_ip.v4[*].id) : var.server_public_ipv4_id : null
     ipv6_enabled = var.server_enable_public_ipv6
-    ipv6 = var.server_enable_public_ipv6 ? var.server_public_ipv6_id == null ? one(hcloud_primary_ip.ipv6[*].id) : var.server_public_ipv6_id : null
+    ipv6 = var.server_enable_public_ipv6 ? var.server_public_ipv6_id == null ? one(hcloud_primary_ip.v6[*].id) : var.server_public_ipv6_id : null
   }
 
   dynamic "network" {
