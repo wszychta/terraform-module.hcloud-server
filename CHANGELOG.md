@@ -1,3 +1,7 @@
+# 1.1.0
+## Main changes
+- Add support for public IPv4 and IPv6 addresses configuration
+
 # 1.0.2
 ## Main changes
 - Describe private network order issue

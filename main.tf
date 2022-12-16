@@ -37,6 +37,28 @@ module "server_user_data_file" {
   yq_binary                 = var.user_data_yq_binary
 }
 
+resource "hcloud_primary_ip" "v4" {
+  count             = var.server_enable_public_ipv4 && var.server_public_ipv4_id == null ? 1 : 0
+  name              = "${var.server_name}-public-ipv4"
+  datacenter        = var.server_datacenter
+  type              = "ipv4"
+  assignee_type     = "server"
+  auto_delete       = var.server_auto_delete_public_ips
+  delete_protection = var.server_enable_protection
+  labels            = var.server_labels
+}
+
+resource "hcloud_primary_ip" "v6" {
+  count             = var.server_enable_public_ipv6 && var.server_public_ipv4_id == null ? 1 : 0
+  name              = "${var.server_name}-public-ipv6"
+  datacenter        = var.server_datacenter
+  type              = "ipv6"
+  assignee_type     = "server"
+  auto_delete       = var.server_auto_delete_public_ips
+  delete_protection = var.server_enable_protection
+  labels            = var.server_labels
+}
+
 resource "hcloud_server" "server_with_lifecycle_rules" {
   name               = var.server_name
   server_type        = var.server_type
@@ -49,11 +71,18 @@ resource "hcloud_server" "server_with_lifecycle_rules" {
   rescue             = var.server_boot_rescue_image
   labels             = var.server_labels
   backups            = var.server_enable_backups
-  firewall_ids       = var.server_firewall_ids
+  firewall_ids       = var.server_enable_public_ipv4 || var.server_enable_public_ipv6 ? var.server_firewall_ids : null
   placement_group_id = var.server_placement_group_id
   delete_protection  = var.server_enable_protection
   rebuild_protection = var.server_enable_protection
   user_data          = var.external_user_data_file != null || local.server_type_family == "ccx" ? var.external_user_data_file : join("", module.server_user_data_file.*.result_file)
+
+  public_net {
+    ipv4_enabled = var.server_enable_public_ipv4
+    ipv4 = var.server_enable_public_ipv4 ? var.server_public_ipv4_id == null ? one(hcloud_primary_ip.ipv4[*].id) : var.server_public_ipv4_id : null
+    ipv6_enabled = var.server_enable_public_ipv6
+    ipv6 = var.server_enable_public_ipv6 ? var.server_public_ipv6_id == null ? one(hcloud_primary_ip.ipv6[*].id) : var.server_public_ipv6_id : null
+  }
 
   dynamic "network" {
     for_each = var.server_private_networks_settings

@@ -96,6 +96,36 @@ variable "server_enable_protection" {
   default     = false
 }
 
+variable "server_auto_delete_public_ips" {
+  type = bool
+  description = "Enable or disable auto deletion of public IP addresses on server deletion"
+  default = false
+}
+
+variable "server_enable_public_ipv4" {
+  type = bool
+  description = "Enable or disable Public IPv4 address"
+  default = false
+}
+
+variable "server_public_ipv4_id" {
+  type = string
+  description = "Assign IPv4 address generated outside of this module instead of creating one with this module"
+  default = null
+}
+
+variable "server_enable_public_ipv6" {
+  type = bool
+  description = "Enable or disable Public IPv6 address"
+  default = false
+}
+
+variable "server_public_ipv6_id" {
+  type = string
+  description = "Assign IPv6 address generated outside of this module"
+  default = null
+}
+
 variable "server_private_networks_settings" {
   type = list(object(
     {
