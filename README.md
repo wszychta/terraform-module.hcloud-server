@@ -253,7 +253,7 @@ If you need such functionality please think about creating Pull Request for desc
 | server_type                           | `string`       | `empty`         | <b>Yes</b>        | Name of the server type this server should be created with. To find all avaliable options run command `hcloud server-type list` |
 | server_image                          | `string`       | `empty`         | <b>Yes</b>        | Name or ID of the image the server is created from. To find all avaliable options run command `hcloud image list -o columns=name \| grep -v -w '-'` |
 | server_location                       | `string`       | `null`          | <b>No</b>         | The location name to create the server in. To find all avaliable options run command `hcloud location list` |
-| server_datacenter                     | `string`       | `null`          | <b>No/Yes</b>     | The datacenter name to create the server in. <b>Required if Public IP will be created with this module</b>  |
+| server_datacenter                     | `string`       | `null`          | <b>No/Yes</b>     | The datacenter name to create the server in. <b>Required if Public IP will be created with this module - it will be also used for new server location variable instead of `server_location`</b>  |
 | server_ssh_keys                       | `string`       | `null`          | <b>No</b>         | SSH key IDs or names which should be injected into the server at creation time` |
 | server_keep_disk                      | `string`       | `false`         | <b>No</b>         | If true, do not upgrade the disk. This allows downgrading the server type later |
 | server_iso                            | `string`       | `false`         | <b>No</b>         | ID or Name of an ISO image to mount |
