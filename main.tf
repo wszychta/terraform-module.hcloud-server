@@ -20,10 +20,12 @@ locals {
 }
 
 module "server_user_data_file" {
-  source                    = "git::git@github.com:wszychta/terraform-module.hcloud-user-data?ref=2.1.1"
+  # source                    = "git::git@github.com:wszychta/terraform-module.hcloud-user-data?ref=2.1.1"
+  source                    = "git::git@github.com:wszychta/terraform-module.hcloud-user-data?ref=primary_addresses"
   count                     = var.external_user_data_file == null && local.server_type_family != "ccx" ? 1 : 0
   server_type               = var.server_type
   server_image              = var.server_image
+  private_networks_only     = var.server_enable_public_ipv4 || var.server_enable_public_ipv6 || var.server_public_ipv4_id != null || var.server_public_ipv6_id != null ? false : true
   private_networks_settings = var.server_private_networks_settings
   additional_users          = var.user_data_additional_users
   additional_write_files    = var.user_data_additional_write_files
