@@ -64,3 +64,13 @@ output "result_user_data_file" {
   value       = var.external_user_data_file != null || local.server_type_family == "ccx" ? var.external_user_data_file : join("", module.server_user_data_file.*.result_file)
   description = "Result cloud-config file which will be used by instance"
 }
+
+output "result_netplan_file" {
+  value       = module.server_user_data_file.netplan_network_file
+  description = "Result cloud-config file which will be used by instance"
+}
+
+output "result_netplan_merge_script" {
+  value       = module.server_user_data_file.netplan_network_merge_script
+  description = "Result cloud-config file which will be used by instance"
+}
