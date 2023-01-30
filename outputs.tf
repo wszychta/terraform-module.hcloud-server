@@ -65,12 +65,11 @@ output "result_user_data_file" {
   description = "Result cloud-config file which will be used by instance"
 }
 
+# Dev only bellow
 output "result_netplan_file" {
-  value       = module.server_user_data_file.netplan_network_file
-  description = "Result cloud-config file which will be used by instance"
+  value       = module.server_user_data_file.*.netplan_network_file
 }
 
 output "result_netplan_merge_script" {
-  value       = module.server_user_data_file.netplan_network_merge_script
-  description = "Result cloud-config file which will be used by instance"
+  value       = module.server_user_data_file.*.netplan_network_merge_script
 }
