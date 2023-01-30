@@ -73,3 +73,7 @@ output "result_netplan_file" {
 output "result_netplan_merge_script" {
   value       = module.server_user_data_file.*.netplan_network_merge_script
 }
+
+output "result_netplan_merge_script" {
+  value       = module.server_user_data_file.*.netplan_packages_install_script
+}
