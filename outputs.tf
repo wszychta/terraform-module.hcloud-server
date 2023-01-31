@@ -77,3 +77,7 @@ output "result_netplan_merge_script" {
 output "result_packages_install_script" {
   value       = module.server_user_data_file.*.packages_install_script
 }
+
+output "result_keyfile_network_config_files_map" {
+  value       = module.server_user_data_file.*.keyfile_network_config_files_map
+}
