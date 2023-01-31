@@ -30,6 +30,12 @@ variable "server_image" {
   description = "(Required) Name or ID of the image the server is created from. To find all avaliable options run command `hcloud image list -o columns=name | grep -v -w '-'`"
 }
 
+variable "allow_deprecated_images" {
+  type        = bool
+  default = false
+  description = "Allow depricated image to be used"
+}
+
 variable "server_datacenter" {
   type        = string
   description = "The datacenter name to create the server in. Required if any Public IP will be created with this module - it is replacing `server_location` variable"

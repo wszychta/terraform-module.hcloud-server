@@ -65,6 +65,7 @@ resource "hcloud_server" "server_with_lifecycle_rules" {
   name               = var.server_name
   server_type        = var.server_type
   image              = var.server_image
+  allow_deprecated_images = var.allow_deprecated_images
   datacenter         = var.server_datacenter
   ssh_keys           = var.server_ssh_keys
   keep_disk          = var.server_keep_disk
