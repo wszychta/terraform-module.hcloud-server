@@ -77,7 +77,3 @@ output "result_netplan_merge_script" {
 output "result_packages_install_script" {
   value       = module.server_user_data_file.*.packages_install_script
 }
-
-output "os_image_name_without_version" {
-  value = module.server_user_data_file.*.os_image_name_without_version
-}
