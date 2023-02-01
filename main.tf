@@ -1,6 +1,6 @@
 /*
 Terraform module for creating Hetzner cloud compatible user-data file
-Copyright (C) 2021 Wojciech Szychta
+Copyright (C) 2023 Wojciech Szychta
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,8 +20,7 @@ locals {
 }
 
 module "server_user_data_file" {
-  # source                    = "git::git@github.com:wszychta/terraform-module.hcloud-user-data?ref=2.1.1"
-  source                    = "git::git@github.com:wszychta/terraform-module.hcloud-user-data?ref=primary_addresses"
+  source                    = "git::git@github.com:wszychta/terraform-module.hcloud-user-data?ref=2.2.1"
   count                     = var.external_user_data_file == null && local.server_type_family != "ccx" ? 1 : 0
   server_type               = var.server_type
   server_image              = var.server_image
@@ -62,28 +61,28 @@ resource "hcloud_primary_ip" "v6" {
 }
 
 resource "hcloud_server" "server_with_lifecycle_rules" {
-  name               = var.server_name
-  server_type        = var.server_type
-  image              = var.server_image
+  name                    = var.server_name
+  server_type             = var.server_type
+  image                   = var.server_image
   allow_deprecated_images = var.allow_deprecated_images
-  datacenter         = var.server_datacenter
-  ssh_keys           = var.server_ssh_keys
-  keep_disk          = var.server_keep_disk
-  iso                = var.server_iso
-  rescue             = var.server_boot_rescue_image
-  labels             = var.server_labels
-  backups            = var.server_enable_backups
-  firewall_ids       = var.server_enable_public_ipv4 || var.server_enable_public_ipv6 || var.server_public_ipv4_id != null || var.server_public_ipv6_id != null ? var.server_firewall_ids : null
-  placement_group_id = var.server_placement_group_id
-  delete_protection  = var.server_enable_protection
-  rebuild_protection = var.server_enable_protection
-  user_data          = var.external_user_data_file != null || local.server_type_family == "ccx" ? var.external_user_data_file : join("", module.server_user_data_file.*.result_file)
+  datacenter              = var.server_datacenter
+  ssh_keys                = var.server_ssh_keys
+  keep_disk               = var.server_keep_disk
+  iso                     = var.server_iso
+  rescue                  = var.server_boot_rescue_image
+  labels                  = var.server_labels
+  backups                 = var.server_enable_backups
+  firewall_ids            = var.server_enable_public_ipv4 || var.server_enable_public_ipv6 || var.server_public_ipv4_id != null || var.server_public_ipv6_id != null ? var.server_firewall_ids : null
+  placement_group_id      = var.server_placement_group_id
+  delete_protection       = var.server_enable_protection
+  rebuild_protection      = var.server_enable_protection
+  user_data               = var.external_user_data_file != null || local.server_type_family == "ccx" ? var.external_user_data_file : join("", module.server_user_data_file.*.result_file)
 
   public_net {
     ipv4_enabled = var.server_public_ipv4_id == null ? var.server_enable_public_ipv4 : true
-    ipv4 = var.server_enable_public_ipv4 ? var.server_public_ipv4_id == null ? one(hcloud_primary_ip.v4[*].id) : var.server_public_ipv4_id : null
+    ipv4         = var.server_enable_public_ipv4 ? var.server_public_ipv4_id == null ? one(hcloud_primary_ip.v4[*].id) : var.server_public_ipv4_id : null
     ipv6_enabled = var.server_public_ipv4_id == null ? var.server_enable_public_ipv6 : true
-    ipv6 = var.server_enable_public_ipv6 ? var.server_public_ipv6_id == null ? one(hcloud_primary_ip.v6[*].id) : var.server_public_ipv6_id : null
+    ipv6         = var.server_enable_public_ipv6 ? var.server_public_ipv6_id == null ? one(hcloud_primary_ip.v6[*].id) : var.server_public_ipv6_id : null
   }
 
   dynamic "network" {

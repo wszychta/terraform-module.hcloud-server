@@ -1,6 +1,6 @@
 /*
 Terraform module for creating Hetzner cloud compatible user-data file
-Copyright (C) 2021 Wojciech Szychta
+Copyright (C) 2023 Wojciech Szychta
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ variable "server_image" {
 
 variable "allow_deprecated_images" {
   type        = bool
-  default = false
+  default     = false
   description = "Allow depricated image to be used"
 }
 

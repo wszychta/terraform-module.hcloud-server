@@ -20,7 +20,7 @@ I have tested this module on below instances types:
 Example for Debian/Ubuntu with few packages installation:
 ```terraform
 module "hetzner_instance" {
-  source                    = "git::git@github.com:wszychta/terraform-module.hcloud-server?ref=1.0.2"
+  source                    = "git::git@github.com:wszychta/terraform-module.hcloud-server?ref=1.2.0"
   server_name               = "testing_vm"
   server_type               = "cpx11"
   server_image              = "ubuntu-20.04"
@@ -35,7 +35,8 @@ module "hetzner_instance" {
       routes = {
         "192.168.0.1" = [
           "192.168.0.0/24",
-          "192.168.1.0/24"
+          "192.168.1.0/24",
+          "0.0.0.0/0" # To enable access to public network via NAT if needed
         ]
       }
       nameservers = {
@@ -87,6 +88,13 @@ module "hetzner_instance" {
 
 ## Known Issues
 
+### Internet Access with only private networks defined
+To enable access to the internet from instance without public ip addresses there are several things to do:
+- Prepare NAT instance with public IP address or PFsense/Opnsense which will have rules for NAT-ing
+- Add in Hetzner Cloud Console or via hcloud/terraform tool route `0.0.0.0/0` to previously prepared NAT instance/router
+- Add route `0.0.0.0/0` to one of the interfaces defined in `private_networks_settings` - take a look at the example above
+- Add one or more DNS servers to `nameservers` in `private_networks_settings` (They can be public ones or private) - take a look at the example above
+
 ### After adding multiple private network interfaces some of them are not avaliable in os
 I saw this behaviour twice on `debian-11` system, but <b>it may happen on all instances types and all systems</b>. The best way to prevent this issue is planning all network interfaces before instance creation, but sometimes it is not enough.
 
@@ -126,11 +134,11 @@ There are 2 ways of solving this issue. Please try them in the order I made:
             1. Open File `/etc/netplan/50-cloud-init.yaml` with favourite editor ex. `vi /etc/netplan/50-cloud-init.yaml`
             1. Change the names of the interfaces to the correct configurations in this file and save it.
             1. Run command `sudo systemctl restart network-manager.service` or reboot instance
-        1. CentOS/Fedora:
-            1. Go to network configuration directory `cd /etc/sysconfig/network-scripts`
-            1. Change <b>interfaces names</b> in the files `route-` and `ifcfg-` 
-            1. Open each `ifcfg-` file and change `DEVICE` option to correct one. After changing save it.
-            1. Run command `sudo systemctl restart network` or reboot instance
+        1. CentOS/Fedora/Rocky:
+            1. Go to network configuration directory `cd /etc/NetworkManager/system-connections`
+            1. Change <b>interfaces names</b> in the affected `.nmconnection` files. 
+            1. Open each `.nmconnection` file and change `id` and `interface-name` option to correct one. After changing save it.
+            1. Run command `sudo systemctl restart NetworkManager` or reboot instance
 1. II option (prevents this issue, but you will have more complex code):
     1. Pass in variable `server_private_network_settings` below options for each interface like in the example below:
         - network_id = `""`
@@ -139,7 +147,7 @@ There are 2 ways of solving this issue. Please try them in the order I made:
     1. Create [Network interfaces](https://registry.terraform.io/providers/hetznercloud/hcloud/latest/docs/resources/server_network) outside of the module scope with `depends_on` terraform flag like in the example below:
     ```terraform
     module "hetzner_instance" {
-      source                    = "git::git@github.com:wszychta/terraform-module.hcloud-server?ref=1.0.2"
+      source                    = "git::git@github.com:wszychta/terraform-module.hcloud-server?ref=1.2.0"
       ...
       server_private_networks_settings = [
         {
@@ -168,7 +176,8 @@ There are 2 ways of solving this issue. Please try them in the order I made:
           routes = {
             "192.168.2.1" = [
               "192.168.2.0/24",
-              "192.168.3.0/24"
+              "192.168.3.0/24",
+              "0.0.0.0/0" # To enable access to public network via NAT if needed
             ]
           }
           nameservers = {
@@ -252,6 +261,7 @@ If you need such functionality please think about creating Pull Request for desc
 | server_name                           | `string`       | `empty`         | <b>Yes</b>        | Name of the server to create (must be unique per project and a valid hostname as per RFC 1123) |
 | server_type                           | `string`       | `empty`         | <b>Yes</b>        | Name of the server type this server should be created with. To find all avaliable options run command `hcloud server-type list` |
 | server_image                          | `string`       | `empty`         | <b>Yes</b>        | Name or ID of the image the server is created from. To find all avaliable options run command `hcloud image list -o columns=name \| grep -v -w '-'` |
+| allow_deprecated_images               | `bool`         | `false`         | <b>No</b>         | Enable or disable depricated images |
 | server_datacenter                     | `string`       | `null`          | <b>No/Yes</b>     | The datacenter name to create the server in. <b>Required if Public IP will be created with this module - it is replacing `server_location` variable</b>  |
 | server_ssh_keys                       | `string`       | `null`          | <b>No</b>         | SSH key IDs or names which should be injected into the server at creation time` |
 | server_keep_disk                      | `string`       | `false`         | <b>No</b>         | If true, do not upgrade the disk. This allows downgrading the server type later |
@@ -315,7 +325,7 @@ If you have and idea how to improve this module please:
 4. In my spare time I will look at proposed changes
 
 ## Copyright 
-Copyright © 2021 Wojciech Szychta
+Copyright © 2023 Wojciech Szychta
 
 ## License
 GNU GENERAL PUBLIC LICENSE Version 3

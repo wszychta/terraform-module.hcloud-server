@@ -1,6 +1,6 @@
 /*
 Terraform module for creating Hetzner cloud compatible user-data file
-Copyright (C) 2021 Wojciech Szychta
+Copyright (C) 2023 Wojciech Szychta
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -63,21 +63,4 @@ output "server_private_networks" {
 output "result_user_data_file" {
   value       = var.external_user_data_file != null || local.server_type_family == "ccx" ? var.external_user_data_file : join("", module.server_user_data_file.*.result_file)
   description = "Result cloud-config file which will be used by instance"
-}
-
-# Dev only bellow
-output "result_netplan_file" {
-  value       = module.server_user_data_file.*.netplan_network_file
-}
-
-output "result_netplan_merge_script" {
-  value       = module.server_user_data_file.*.netplan_network_merge_script
-}
-
-output "result_packages_install_script" {
-  value       = module.server_user_data_file.*.packages_install_script
-}
-
-output "result_keyfile_network_config_files_map" {
-  value       = module.server_user_data_file.*.keyfile_network_config_files_map
 }
