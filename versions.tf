@@ -1,6 +1,6 @@
 /*
 Terraform module for creating Hetzner cloud compatible user-data file
-Copyright (C) 2021 Wojciech Szychta
+Copyright (C) 2023 Wojciech Szychta
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@ terraform {
   required_providers {
     hcloud = {
       source  = "hetznercloud/hcloud"
-      version = ">= 1.32.1"
+      version = ">= 1.36.1"
     }
   }
   required_version = ">= 1.0.0"

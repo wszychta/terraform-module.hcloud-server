@@ -1,6 +1,6 @@
 /*
 Terraform module for creating Hetzner cloud compatible user-data file
-Copyright (C) 2021 Wojciech Szychta
+Copyright (C) 2023 Wojciech Szychta
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -30,15 +30,15 @@ variable "server_image" {
   description = "(Required) Name or ID of the image the server is created from. To find all avaliable options run command `hcloud image list -o columns=name | grep -v -w '-'`"
 }
 
-variable "server_location" {
-  type        = string
-  description = "The location name to create the server in. To find all avaliable options run command `hcloud location list`"
-  default     = null
+variable "allow_deprecated_images" {
+  type        = bool
+  default     = false
+  description = "Allow depricated image to be used"
 }
 
 variable "server_datacenter" {
   type        = string
-  description = "The datacenter name to create the server in"
+  description = "The datacenter name to create the server in. Required if any Public IP will be created with this module - it is replacing `server_location` variable"
   default     = null
 }
 
@@ -94,6 +94,36 @@ variable "server_enable_protection" {
   type        = bool
   description = "Enable or disable delete and rebuild protection - They must be the same for now"
   default     = false
+}
+
+variable "server_auto_delete_public_ips" {
+  type        = bool
+  description = "Enable or disable auto deletion of public IP addresses on server deletion"
+  default     = false
+}
+
+variable "server_enable_public_ipv4" {
+  type        = bool
+  description = "Enable or disable Public IPv4 address"
+  default     = false
+}
+
+variable "server_public_ipv4_id" {
+  type        = string
+  description = "Assign IPv4 address generated outside of this module instead of creating one with this module - if provided it will automatically ignore value of variable server_enable_public_ipv4"
+  default     = null
+}
+
+variable "server_enable_public_ipv6" {
+  type        = bool
+  description = "Enable or disable Public IPv6 address"
+  default     = false
+}
+
+variable "server_public_ipv6_id" {
+  type        = string
+  description = "Assign IPv6 address generated outside of this module instead of creating one with this module - if provided it will automatically ignore value of variable server_enable_public_ipv6"
+  default     = null
 }
 
 variable "server_private_networks_settings" {
