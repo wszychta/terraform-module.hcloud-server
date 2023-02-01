@@ -20,8 +20,7 @@ locals {
 }
 
 module "server_user_data_file" {
-  # source                    = "git::git@github.com:wszychta/terraform-module.hcloud-user-data?ref=2.2.2"
-  source                    = "git::git@github.com:wszychta/terraform-module.hcloud-user-data?ref=hotfix-apt-packages-updates"
+  source                    = "git::git@github.com:wszychta/terraform-module.hcloud-user-data?ref=2.2.2"
   count                     = var.external_user_data_file == null && local.server_type_family != "ccx" ? 1 : 0
   server_type               = var.server_type
   server_image              = var.server_image
