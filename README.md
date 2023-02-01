@@ -20,7 +20,7 @@ I have tested this module on below instances types:
 Example for Debian/Ubuntu with few packages installation:
 ```terraform
 module "hetzner_instance" {
-  source                    = "git::git@github.com:wszychta/terraform-module.hcloud-server?ref=1.2.0"
+  source                    = "git::git@github.com:wszychta/terraform-module.hcloud-server?ref=1.1.0"
   server_name               = "testing_vm"
   server_type               = "cpx11"
   server_image              = "ubuntu-20.04"
@@ -138,7 +138,7 @@ There are 2 ways of solving this issue. Please try them in the order I made:
             1. Go to network configuration directory `cd /etc/NetworkManager/system-connections`
             1. Change <b>interfaces names</b> in the affected `.nmconnection` files. 
             1. Open each `.nmconnection` file and change `id` and `interface-name` option to correct one. After changing save it.
-            1. Run command `sudo systemctl restart NetworkManager` or reboot instance
+            1. reboot instance
 1. II option (prevents this issue, but you will have more complex code):
     1. Pass in variable `server_private_network_settings` below options for each interface like in the example below:
         - network_id = `""`
@@ -147,7 +147,7 @@ There are 2 ways of solving this issue. Please try them in the order I made:
     1. Create [Network interfaces](https://registry.terraform.io/providers/hetznercloud/hcloud/latest/docs/resources/server_network) outside of the module scope with `depends_on` terraform flag like in the example below:
     ```terraform
     module "hetzner_instance" {
-      source                    = "git::git@github.com:wszychta/terraform-module.hcloud-server?ref=1.2.0"
+      source                    = "git::git@github.com:wszychta/terraform-module.hcloud-server?ref=1.1.0"
       ...
       server_private_networks_settings = [
         {

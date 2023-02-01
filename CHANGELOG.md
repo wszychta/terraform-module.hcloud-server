@@ -1,6 +1,8 @@
 # 1.1.0
 ## Main changes
 - Add support for public IPv4 and IPv6 addresses configuration
+- Update `user-data` module to add support for private network instances
+- Add possibility to run depricated by Hetzner images
 ## Breaking Changes
 - Removal of `server_location` variable - using both `location` and `datacenter` variables is not allowed for servers and `datacenter` is the only allowed variable for `hcloud_primary_ip` resource
 
